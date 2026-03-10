@@ -9,6 +9,15 @@ resource "kind_cluster" "jupyterhub" {
     kind        = "Cluster"
     api_version = "kind.x-k8s.io/v1alpha4"
 
+    # containerd_config_patches lets you inject TOML snippets into every node's
+    # containerd config.  This is the ONLY way to make Kind nodes trust a
+    # corporate private registry CA certificate — Kubernetes imagePullSecrets
+    # only carry credentials, not TLS trust roots.  Set the
+    # containerd_config_patches variable in config.auto.tfvars (see its
+    # commented-out example) before applying if your registry uses a
+    # self-signed or corporate CA.
+    containerd_config_patches = var.containerd_config_patches
+
     node {
       role = "control-plane"
 

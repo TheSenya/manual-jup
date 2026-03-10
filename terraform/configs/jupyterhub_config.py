@@ -31,13 +31,14 @@ c.KubeSpawner.storage_pvc_ensure = True
 c.KubeSpawner.storage_capacity = "1Gi"
 c.KubeSpawner.storage_access_modes = ["ReadWriteOnce"]
 
-# Private registry — pull secret for user notebook pods
-%{ if image_pull_secret_name != "" ~}
-c.KubeSpawner.image_pull_secrets = ["${image_pull_secret_name}"]
-%{ endif ~}
-
 # ---------------------------------------------------------------------------
-# Authenticator — dummy auth allows any password (replace for production)
+# Authenticator
+# WARNING: DummyAuthenticator accepts ANY username and password.
+# This is only suitable for local development / testing.
+# Replace with a real authenticator before deploying to a corporate network:
+#   PAM:    c.JupyterHub.authenticator_class = "pam"
+#   LDAP:   pip install jupyterhub-ldapauthenticator, then configure
+#   OAuth2: pip install oauthenticator, then configure
 # ---------------------------------------------------------------------------
 c.JupyterHub.authenticator_class = "dummy"
 

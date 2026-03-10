@@ -116,10 +116,12 @@ resource "kubernetes_role" "hub" {
   }
 
   # Manage per-user services
+  # patch + update are required: KubeSpawner may update service labels/selectors
+  # after initial creation. Without these verbs the API server returns 403.
   rule {
     api_groups = [""]
     resources  = ["services"]
-    verbs      = ["get", "list", "watch", "create", "delete"]
+    verbs      = ["get", "list", "watch", "create", "delete", "patch", "update"]
   }
 
   # Manage per-user PVCs
@@ -129,10 +131,19 @@ resource "kubernetes_role" "hub" {
     verbs      = ["get", "list", "watch", "create", "delete"]
   }
 
-  # Read secrets
+  # Read/write secrets — KubeSpawner reads pull secrets and may create
+  # per-user secrets in some configurations (e.g. named-server environments).
   rule {
     api_groups = [""]
     resources  = ["secrets"]
+    verbs      = ["get", "list", "watch", "create", "delete"]
+  }
+
+  # Read ConfigMaps — KubeSpawner reads them for profile-list and other
+  # advanced configurations. Missing this causes silent spawner failures.
+  rule {
+    api_groups = [""]
+    resources  = ["configmaps"]
     verbs      = ["get", "list", "watch"]
   }
 }
@@ -169,10 +180,11 @@ resource "kubernetes_config_map" "hub" {
 
   data = {
     "jupyterhub_config.py" = templatefile("${path.module}/configs/jupyterhub_config.py", {
-      singleuser_image       = var.singleuser_image
-      singleuser_image_tag   = var.singleuser_image_tag
-      namespace              = var.namespace
-      image_pull_secret_name = var.registry_docker_config_json != "" ? kubernetes_secret.registry_pull[0].metadata[0].name : ""
+      singleuser_image             = var.singleuser_image
+      singleuser_image_tag         = var.singleuser_image_tag
+      namespace                    = var.namespace
+      image_pull_secret_name       = var.registry_docker_config_json != "" ? kubernetes_secret.registry_pull[0].metadata[0].name : ""
+      registry_ca_cert_secret_name = var.registry_ca_cert_file != "" ? kubernetes_secret.registry_ca_cert[0].metadata[0].name : ""
     })
   }
 }
@@ -263,6 +275,19 @@ resource "kubernetes_deployment" "hub" {
             mount_path = "/srv/jupyterhub"
           }
 
+          # Mount the corporate CA certificate so the Hub process can verify
+          # TLS connections to the private registry and any other internal
+          # services that use a self-signed or corporate CA.
+          dynamic "volume_mount" {
+            for_each = var.registry_ca_cert_file != "" ? [1] : []
+            content {
+              name       = "registry-ca-cert"
+              mount_path = "/usr/local/share/ca-certificates/registry-ca.crt"
+              sub_path   = "ca.crt"
+              read_only  = true
+            }
+          }
+
           readiness_probe {
             http_get {
               path = "/hub/health"
@@ -293,6 +318,21 @@ resource "kubernetes_deployment" "hub" {
           name = "hub-db"
           persistent_volume_claim {
             claim_name = kubernetes_persistent_volume_claim.hub_db.metadata[0].name
+          }
+        }
+
+        # Expose the corporate CA cert to the Hub process.
+        # NOTE: this gives the certificate to the Hub *application*, but
+        # containerd (which pulls images) does NOT read from this mount.
+        # Image pull TLS trust must be configured via containerd_config_patches
+        # in the Kind cluster (see kind.tf).
+        dynamic "volume" {
+          for_each = var.registry_ca_cert_file != "" ? [1] : []
+          content {
+            name = "registry-ca-cert"
+            secret {
+              secret_name = kubernetes_secret.registry_ca_cert[0].metadata[0].name
+            }
           }
         }
       }
