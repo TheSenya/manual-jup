@@ -13,7 +13,7 @@ kind_cluster_name = "jupyterhub"
 # corporate registry BEFORE running terraform apply.
 # Match the tag to the Kubernetes version you need (v1.31.x is stable as of 2026).
 # See https://hub.docker.com/r/kindest/node/tags for available versions.
-kind_node_image = "YOUR_REGISTRY.corp/kindest/node:v1.31.0"
+kind_node_image = "dockerhub.registry.td.com/kindest/node:v1.31.0"
 
 # -----------------------------------------------------------------------------
 # Namespace
@@ -33,16 +33,16 @@ namespace = "jupyterhub"
 # -----------------------------------------------------------------------------
 
 # JupyterHub Hub process
-hub_image     = "YOUR_REGISTRY.corp/jupyterhub/k8s-hub"
-hub_image_tag = "4.1.6"
+hub_image     = "dockerhub.registry.td.com/jupyterhub/k8s-hub"
+hub_image_tag = "4.3.1"
 
 # Configurable HTTP Proxy
-proxy_image     = "YOUR_REGISTRY.corp/jupyterhub/configurable-http-proxy"
-proxy_image_tag = "4.6.2"
+proxy_image     = "dockerhub.registry.td.com/jupyterhub/configurable-http-proxy"
+proxy_image_tag = "5"
 
 # Per-user notebook server (spawned by KubeSpawner)
-singleuser_image     = "YOUR_REGISTRY.corp/jupyterhub/k8s-singleuser-sample"
-singleuser_image_tag = "4.1.6"
+singleuser_image     = "dockerhub.registry.td.com/jupyterhub/k8s-singleuser-sample"
+singleuser_image_tag = "latest"
 
 # -----------------------------------------------------------------------------
 # Private registry — TLS trust (containerd, Kind nodes)

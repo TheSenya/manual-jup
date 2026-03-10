@@ -246,7 +246,8 @@ resource "kubernetes_deployment" "hub" {
 
         container {
           name  = "hub"
-          image = "${var.hub_image}:${var.hub_image_tag}"
+          image             = "${var.hub_image}:${var.hub_image_tag}"
+          image_pull_policy = "IfNotPresent"
 
           port {
             name           = "http"
@@ -401,7 +402,8 @@ resource "kubernetes_deployment" "proxy" {
 
         container {
           name  = "proxy"
-          image = "${var.proxy_image}:${var.proxy_image_tag}"
+          image             = "${var.proxy_image}:${var.proxy_image_tag}"
+          image_pull_policy = "IfNotPresent"
 
           args = [
             "configurable-http-proxy",

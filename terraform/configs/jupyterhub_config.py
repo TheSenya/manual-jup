@@ -15,6 +15,7 @@ c.ConfigurableHTTPProxy.should_start = False
 c.JupyterHub.spawner_class = "kubespawner.KubeSpawner"
 
 c.KubeSpawner.image = "${singleuser_image}:${singleuser_image_tag}"
+c.KubeSpawner.image_pull_policy = "IfNotPresent"
 c.KubeSpawner.namespace = "${namespace}"
 c.KubeSpawner.service_account = "default"
 
