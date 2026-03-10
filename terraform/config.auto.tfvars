@@ -9,6 +9,12 @@
 # -----------------------------------------------------------------------------
 kind_cluster_name = "jupyterhub"
 
+# Kind node image — must be mirrored from docker.io/kindest/node to your
+# corporate registry BEFORE running terraform apply.
+# Match the tag to the Kubernetes version you need (v1.31.x is stable as of 2026).
+# See https://hub.docker.com/r/kindest/node/tags for available versions.
+kind_node_image = "YOUR_REGISTRY.corp/kindest/node:v1.31.0"
+
 # -----------------------------------------------------------------------------
 # Namespace
 # -----------------------------------------------------------------------------

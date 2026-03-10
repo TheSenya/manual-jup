@@ -3,6 +3,7 @@
 # =============================================================================
 resource "kind_cluster" "jupyterhub" {
   name           = var.kind_cluster_name
+  node_image     = var.kind_node_image
   wait_for_ready = true
 
   kind_config {

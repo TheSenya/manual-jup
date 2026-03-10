@@ -6,6 +6,11 @@ variable "kind_cluster_name" {
   type        = string
 }
 
+variable "kind_node_image" {
+  description = "Docker image used for Kind cluster nodes. Must be a mirror of kindest/node at the correct Kubernetes version. Example: YOUR_REGISTRY.corp/kindest/node:v1.31.0"
+  type        = string
+}
+
 # -----------------------------------------------------------------------------
 # Namespace
 # -----------------------------------------------------------------------------
