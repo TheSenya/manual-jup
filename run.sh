@@ -16,6 +16,7 @@ Commands:
   validate    Check syntax and configuration
   fmt         Format .tf files
   port-forward  Forward the proxy service to localhost:8080
+  clean       Remove all Terraform-generated files (.terraform/, lock file, state files)
 
 Any extra arguments are forwarded to the underlying command.
 
@@ -25,6 +26,7 @@ Examples:
   ./run.sh apply -auto-approve
   ./run.sh destroy
   ./run.sh port-forward
+  ./run.sh clean
 EOF
 }
 
@@ -65,6 +67,27 @@ case "$COMMAND" in
     SVC=$(terraform -chdir="$TF_DIR" output -raw proxy_service_name 2>/dev/null || echo "jupyterhub-proxy-public")
     echo "Forwarding $SVC to http://localhost:8080 ..."
     kubectl port-forward -n "$NS" "svc/$SVC" 8080:80 "$@"
+    ;;
+  clean)
+    echo "The following Terraform-generated files will be removed from $TF_DIR:"
+    echo "  .terraform/           (provider plugins and modules)"
+    echo "  .terraform.lock.hcl   (dependency lock file)"
+    echo "  terraform.tfstate     (local state)"
+    echo "  terraform.tfstate.backup"
+    echo "  crash.log             (Terraform panic logs)"
+    echo
+    read -r -p "Continue? [y/N] " CONFIRM
+    if [[ "${CONFIRM,,}" != "y" ]]; then
+      echo "Aborted."
+      exit 0
+    fi
+    rm -rf \
+      "$TF_DIR/.terraform" \
+      "$TF_DIR/.terraform.lock.hcl" \
+      "$TF_DIR/terraform.tfstate" \
+      "$TF_DIR/terraform.tfstate.backup" \
+      "$TF_DIR/crash.log"
+    echo "Done. Run './run.sh init' before the next apply."
     ;;
   *)
     echo "Error: unknown command '$COMMAND'"
