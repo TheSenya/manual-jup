@@ -405,8 +405,8 @@ resource "kubernetes_deployment" "proxy" {
           image             = "${var.proxy_image}:${var.proxy_image_tag}"
           image_pull_policy = "IfNotPresent"
 
+          command = ["configurable-http-proxy"]
           args = [
-            "configurable-http-proxy",
             "--ip=0.0.0.0",
             "--port=8000",
             "--api-ip=0.0.0.0",
